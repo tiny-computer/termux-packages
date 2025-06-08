@@ -7,13 +7,13 @@ set -e
 
 export TERMUX_SCRIPTDIR=$(realpath "$(dirname "$(realpath "$0")")/../")
 . $(dirname "$(realpath "$0")")/properties.sh
-BOOTSTRAP_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/bootstrap-tmp.XXXXXXXX")
+BOOTSTRAP_TMPDIR=$(sudo mktemp -d "${TMPDIR:-/tmp}/bootstrap-tmp.XXXXXXXX")
 trap 'rm -rf $BOOTSTRAP_TMPDIR' EXIT
 
 # By default, bootstrap archives will be built for all architectures
 # supported by Termux application.
 # Override with option '--architectures'.
-TERMUX_ARCHITECTURES=("arm" "aarch64" "x86_64")
+TERMUX_ARCHITECTURES=("aarch64")
 
 # The supported termux package managers.
 TERMUX_PACKAGE_MANAGERS=("apt")
@@ -44,7 +44,7 @@ for cmd in ar awk curl grep gzip find sed tar xargs xz zip jq; do
 	fi
 done
 
-TERMUX_BUILD_BOOTSTRAPS=false
+TERMUX_BUILD_BOOTSTRAPS=true
 
 # Download package lists from remote repository.
 read_package_list_deb() {
@@ -204,26 +204,26 @@ pull_package() {
 				tar xf "$data_archive" -C "$BOOTSTRAP_ROOTFS"
 
 				# Register extracted files.
-				tar tf "$data_archive" | sed -E -e 's@^\./@/@' -e 's@^/$@/.@' -e 's@^([^./])@/\1@' > "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info/${package_name}.list"
+#				tar tf "$data_archive" | sed -E -e 's@^\./@/@' -e 's@^/$@/.@' -e 's@^([^./])@/\1@' > "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info/${package_name}.list"
 
 				# Generate checksums (md5).
 				tar xf "$data_archive"
-				find data -type f -print0 | xargs -0 -r md5sum | sed 's@^\.$@@g' > "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info/${package_name}.md5sums"
+#				find data -type f -print0 | xargs -0 -r md5sum | sed 's@^\.$@@g' > "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info/${package_name}.md5sums"
 
 				# Extract metadata.
-				tar xf "$control_archive"
-				{
-					cat control
-					echo "Status: install ok installed"
-					echo
-				} >> "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/status"
-
-				# Additional data: conffiles & scripts
-				for file in conffiles postinst postrm preinst prerm; do
-					if [ -f "${PWD}/${file}" ]; then
-						cp "$file" "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info/${package_name}.${file}"
-					fi
-				done
+#				tar xf "$control_archive"
+#				{
+#					cat control
+#					echo "Status: install ok installed"
+#					echo
+#				} >> "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/status"
+#
+#				# Additional data: conffiles & scripts
+#				for file in conffiles postinst postrm preinst prerm; do
+#					if [ -f "${PWD}/${file}" ]; then
+#						cp "$file" "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info/${package_name}.${file}"
+#					fi
+#				done
 			)
 		fi
 	else
@@ -416,70 +416,74 @@ for package_arch in "${TERMUX_ARCHITECTURES[@]}"; do
 	BOOTSTRAP_ROOTFS="$BOOTSTRAP_TMPDIR/rootfs-${package_arch}"
 	BOOTSTRAP_PKGDIR="$BOOTSTRAP_TMPDIR/packages-${package_arch}"
 
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/apt/apt.conf.d"
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/apt/preferences.d"
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info"
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/triggers"
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/updates"
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/log/apt"
-	touch "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/available"
-	touch "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/status"
+	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}"
 
-	# Setup nano postinst (result of update-alternatives --install $TERMUX_PREFIX/bin/editor editor $TERMUX_PREFIX/bin/nano 20):
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/alternatives/" \
-		 "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/bin/" \
-		 "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/alternatives/"
-	ln -s "${TERMUX_PREFIX}/bin/nano" "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/alternatives/editor"
-	ln -s "${TERMUX_PREFIX}/etc/alternatives/editor" "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/bin/editor"
-	cat << EOF > "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/alternatives/editor"
-auto
-${TERMUX_PREFIX}/bin/editor
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/apt/apt.conf.d"
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/apt/preferences.d"
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/info"
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/triggers"
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/updates"
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/log/apt"
+#	touch "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/available"
+#	touch "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/status"
+#
+#	# Setup nano postinst (result of update-alternatives --install $TERMUX_PREFIX/bin/editor editor $TERMUX_PREFIX/bin/nano 20):
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/alternatives/" \
+#		 "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/bin/" \
+#		 "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/alternatives/"
+#	ln -s "${TERMUX_PREFIX}/bin/nano" "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/etc/alternatives/editor"
+#	ln -s "${TERMUX_PREFIX}/etc/alternatives/editor" "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/bin/editor"
+#	cat << EOF > "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/var/lib/dpkg/alternatives/editor"
+#auto
+#${TERMUX_PREFIX}/bin/editor
+#
+#${TERMUX_PREFIX}/bin/nano
+#20
+#
+#EOF
 
-${TERMUX_PREFIX}/bin/nano
-20
-
-EOF
-
-	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/tmp"
+#	mkdir -p "${BOOTSTRAP_ROOTFS}/${TERMUX_PREFIX}/tmp"
 
 	# Read package metadata.
 	unset PACKAGE_METADATA
 	declare -A PACKAGE_METADATA
-	if [ ${TERMUX_PACKAGE_MANAGER} = "apt" ]; then
-		if [ "${TERMUX_BUILD_BOOTSTRAPS}" != true ]; then
-			read_package_list_deb "$package_arch"
-		fi
-	else
-		download_db_packages_pac
-	fi
+#	if [ ${TERMUX_PACKAGE_MANAGER} = "apt" ]; then
+#		if [ "${TERMUX_BUILD_BOOTSTRAPS}" != true ]; then
+#			read_package_list_deb "$package_arch"
+#		fi
+#	else
+#		download_db_packages_pac
+#	fi
 
 	# Package manager.
-	pull_package ${TERMUX_PACKAGE_MANAGER}
+#	pull_package ${TERMUX_PACKAGE_MANAGER}
 
 	# Core utilities.
-	pull_package bash # Used by `termux-bootstrap-second-stage.sh`
-	pull_package command-not-found
-	pull_package curl
-	pull_package dash
-	pull_package findutils
-	pull_package gawk
-	pull_package procps
-	pull_package psmisc
-	pull_package tar
-	pull_package termux-exec
-	pull_package termux-tools
-	pull_package util-linux
+#	pull_package bash # Used by `termux-bootstrap-second-stage.sh`
+#	pull_package command-not-found
+#	pull_package curl
+#	pull_package dash
+#	pull_package findutils
+#	pull_package gawk
+#	pull_package procps
+#	pull_package psmisc
+#	pull_package termux-exec
+#	pull_package termux-tools
+#	pull_package util-linux
 
 	# Additional.
-	pull_package ed
-	pull_package debianutils
-	pull_package dos2unix
-	pull_package inetutils
-	pull_package nano
-	pull_package net-tools
-	pull_package patch
-	pull_package unzip
-
+#	pull_package ed
+#	pull_package debianutils
+#	pull_package dos2unix
+#	pull_package inetutils
+#	pull_package nano
+#	pull_package net-tools
+#	pull_package patch
+#	pull_package unzip
+	pull_package proot
+	pull_package busybox
+	pull_package tar
+	pull_package virglrenderer-android
 	# Handle additional packages.
 	for add_pkg in "${ADDITIONAL_PACKAGES[@]}"; do
 		pull_package "$add_pkg"

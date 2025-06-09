@@ -10,10 +10,9 @@ TERMUX_PKG_SRCURL=(
 	https://github.com/anholt/libepoxy/archive/refs/tags/${_LIBEPOXY_VERSION}.tar.gz
 )
 TERMUX_PKG_SHA256=(
-	446ab3e265f574ec598e77bdfbf0616ee3c77361f0574bec733ba4bac4df730a
+	d7c30699f8dcd4b2fef17332fd5c2ae64fdae8585f64f14363a94799a34e74f4
 	a7ced37f4102b745ac86d6a70a9da399cc139ff168ba6b8002b4d8d43c900c15
 )
-TERMUX_PKG_DEPENDS="angle-android"
 TERMUX_PKG_HOSTBUILD=true
 
 termux_step_post_get_source() {

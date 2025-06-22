@@ -5,9 +5,8 @@ TERMUX_PKG_LICENSE_FILE="llvm/LICENSE.TXT"
 TERMUX_PKG_MAINTAINER="@finagolfin"
 # Keep flang version and revision in sync when updating (enforced by check in termux_step_pre_configure).
 LLVM_MAJOR_VERSION=20
-TERMUX_PKG_VERSION=${LLVM_MAJOR_VERSION}.1.3
-TERMUX_PKG_REVISION=1
-TERMUX_PKG_SHA256=b6183c41281ee3f23da7fda790c6d4f5877aed103d1e759763b1008bdd0e2c50
+TERMUX_PKG_VERSION=${LLVM_MAJOR_VERSION}.1.7
+TERMUX_PKG_SHA256=cd8fd55d97ad3e360b1d5aaf98388d1f70dfffb7df36beee478be3b839ff9008
 TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_SRCURL=https://github.com/llvm/llvm-project/releases/download/llvmorg-$TERMUX_PKG_VERSION/llvm-project-${TERMUX_PKG_VERSION}.src.tar.xz
 TERMUX_PKG_HOSTBUILD=true

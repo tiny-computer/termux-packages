@@ -125,7 +125,7 @@ pull_package() {
 			if [[ -v "PACKAGE_METADATA[$package_to_build]" ]]; then
 				echo "INFO: Package $package_to_build is already built"
 			else
-				./build-package.sh -a "$package_arch" "$package_to_build"
+				./build-package.sh -i -a "$package_arch" "$package_to_build"
 			fi
 
 			# Scan through built .deb files:

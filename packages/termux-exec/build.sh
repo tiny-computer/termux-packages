@@ -3,8 +3,9 @@ TERMUX_PKG_DESCRIPTION="An execve() wrapper to make /bin and /usr/bin shebangs w
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION=1.7
-TERMUX_PKG_SRCURL=https://github.com/termux-play-store/termux-exec/archive/refs/tags/${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=d4b7374e0ba9c632b6a80528dea26c6880261c02df0c11e01689f7bd5316b4bb
+_COMMIT=4d49173edc562f8cc41c45e03963def44d6a0882
+TERMUX_PKG_SRCURL=https://github.com/tiny-computer/termux-exec/archive/${_COMMIT}.zip
+TERMUX_PKG_SHA256=5df3983adcfb2708d04da36cac0566b079658ddf9ca8e3ff43d74fbea21e390f
 TERMUX_PKG_ESSENTIAL=true
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_MAKE_ARGS="TERMUX_PREFIX=${TERMUX_PREFIX} TERMUX_BASE_DIR=${TERMUX_BASE_DIR}"

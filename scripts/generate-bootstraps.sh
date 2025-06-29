@@ -467,7 +467,7 @@ for package_arch in "${TERMUX_ARCHITECTURES[@]}"; do
 #	pull_package gawk
 #	pull_package procps
 #	pull_package psmisc
-	pull_package termux-exec
+#	pull_package termux-exec
 #	pull_package termux-tools
 #	pull_package util-linux
 

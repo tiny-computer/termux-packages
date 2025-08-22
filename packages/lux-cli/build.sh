@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://nvim-neorocks.github.io/
 TERMUX_PKG_DESCRIPTION="A package manager for Lua, similar to luarocks"
 TERMUX_PKG_LICENSE="LGPL-3.0-or-later"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.15.2"
+TERMUX_PKG_VERSION="0.15.4"
 TERMUX_PKG_SRCURL="https://github.com/nvim-neorocks/lux/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
-TERMUX_PKG_SHA256=d214eb0bfaa8a3fde74177e31b17483eb61c2f5296981b726e89809e17039a36
+TERMUX_PKG_SHA256=8a16a4a81da9057628bf584680ad381bc87989c858215cfd9755aa25618bf51d
 TERMUX_PKG_DEPENDS="bzip2, gpgme, libgit2, libgpg-error, lua54, openssl, xz-utils"
 TERMUX_PKG_PROVIDES="lx"
 TERMUX_PKG_AUTO_UPDATE=true
@@ -135,6 +135,14 @@ termux_step_pre_configure() {
 	fi
 
 	termux_setup_rust
+
+	# ld: error: undefined symbol: __atomic_compare_exchange
+	# ld: error: undefined symbol: __atomic_load
+	# ld: error: undefined symbol: __atomic_is_lock_free
+	if [[ "${TERMUX_ARCH}" == "i686" ]]; then
+		local env_host=$(printf $CARGO_TARGET_NAME | tr a-z A-Z | sed s/-/_/g)
+		export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C link-arg=$(${CC} -print-libgcc-file-name)"
+	fi
 
 	cargo fetch --locked --target "$CARGO_TARGET_NAME"
 

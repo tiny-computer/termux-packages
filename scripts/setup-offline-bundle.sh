@@ -25,14 +25,14 @@ export TERMUX_COMMON_CACHEDIR="$TERMUX_PKG_TMPDIR"
 export TERMUX_HOST_PLATFORM=aarch64-linux-android
 export TERMUX_ARCH_BITS=64
 export TERMUX_BUILD_TUPLE=x86_64-pc-linux-gnu
-export TERMUX_PKG_API_LEVEL=29
+export TERMUX_PKG_API_LEVEL=30
 export TERMUX_TOPDIR="$HOME/.termux-build"
 export TERMUX_PYTHON_CROSSENV_PREFIX="$TERMUX_TOPDIR/python-crossenv-prefix"
 export TERMUX_PYTHON_VERSION=$(. "$TERMUX_SCRIPTDIR/packages/python/build.sh"; echo "$_MAJOR_VERSION")
 export TERMUX_PYTHON_HOME=$TERMUX_PREFIX/lib/python${TERMUX_PYTHON_VERSION}
 export CC=gcc CXX=g++ LD=ld AR=ar STRIP=strip PKG_CONFIG=pkg-config
 export CPPFLAGS="" CFLAGS="" CXXFLAGS="" LDFLAGS=""
-export TERMUX_PKG_GO_USE_OLDER=false
+export TERMUX_PACKAGE_LIBRARY=bionic
 mkdir -p "$TERMUX_PKG_TMPDIR"
 
 # Build tools.

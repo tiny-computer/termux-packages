@@ -6,7 +6,7 @@ TERMUX_PKG_MAINTAINER="Michal Bednarski @michalbednarski"
 # Just bump commit and version when needed:
 _COMMIT=9fe52bafd25373f0a9f78099f530f3aff617fd79
 TERMUX_PKG_VERSION=5.1.107
-TERMUX_PKG_REVISION=66
+TERMUX_PKG_REVISION=67
 TERMUX_PKG_SRCURL=https://github.com/tiny-computer/proot-termux/archive/${_COMMIT}.zip
 TERMUX_PKG_SHA256=ab41f1febba393f49488ab429cde293513d70622738cc7fb3fdbe83098515f48
 TERMUX_PKG_AUTO_UPDATE=false

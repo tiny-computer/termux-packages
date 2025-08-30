@@ -2,10 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://www.chromium.org/Home
 TERMUX_PKG_DESCRIPTION="Chromium web browser (Host tools)"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@licy183"
-TERMUX_PKG_VERSION=137.0.7151.119
+TERMUX_PKG_VERSION=139.0.7258.138
 TERMUX_PKG_SRCURL=https://commondatastorage.googleapis.com/chromium-browser-official/chromium-$TERMUX_PKG_VERSION.tar.xz
-TERMUX_PKG_SHA256=0deb4e0a63ff9bf1594c303781d67f55fa5b0bb35ab84bc71aef89ccd0b7e052
-TERMUX_PKG_DEPENDS="atk, cups, dbus, fontconfig, gtk3, krb5, libc++, libdrm, libevdev, libxkbcommon, libminizip, libnss, libx11, mesa, openssl, pango, pulseaudio, zlib"
+TERMUX_PKG_SHA256=86db7326987a280380e35cf1e961df8d08fb1f8eb3b0ae9ee8250b5dff65e1ea
+TERMUX_PKG_DEPENDS="atk, cups, dbus, fontconfig, gtk3, krb5, libc++, libevdev, libxkbcommon, libminizip, libnss, libx11, mesa, openssl, pango, pulseaudio, zlib"
 TERMUX_PKG_BUILD_DEPENDS="libffi-static"
 # TODO: Split chromium-common and chromium-headless
 # TERMUX_PKG_DEPENDS+=", chromium-common"
@@ -24,14 +24,14 @@ termux_step_post_get_source() {
 	local f
 	for f in $(find "$TERMUX_PKG_BUILDER_DIR/cr-patches" -maxdepth 1 -type f -name *.patch | sort); do
 		echo "Applying patch: $(basename $f)"
-		patch -p1 < "$f"
+		patch -p1 --silent < "$f"
 	done
 
 	# Apply patches for jumbo build
 	local f
 	for f in $(find "$TERMUX_PKG_BUILDER_DIR/jumbo-patches" -maxdepth 1 -type f -name *.patch | sort); do
 		echo "Applying patch: $(basename $f)"
-		patch -p1 < "$f"
+		patch -p1 --silent < "$f"
 	done
 
 	# Use some system libs
@@ -177,8 +177,6 @@ chrome_pgo_phase = 0
 treat_warnings_as_errors = false
 # Use system libraries as little as possible
 use_system_freetype = false
-# use_system_libdrm = true
-# use_system_libffi = false
 use_custom_libcxx = false
 use_custom_libcxx_for_host = true
 use_allocator_shim = false
@@ -212,8 +210,6 @@ use_alsa = false
 use_pulseaudio = true
 rtc_use_pipewire = false
 use_vaapi = false
-# See comments below
-enable_nacl = false
 # Host compiler (clang-13) doesn't support LTO well
 is_cfi = false
 use_cfi_icall = false
@@ -301,6 +297,9 @@ termux_step_make() {
 	time ninja -C out/Release \
 						third_party/pdfium \
 						third_party/pdfium:pdfium_public_headers
+
+	# # Build other components
+	# ninja -C out/Release chromedriver chrome chrome_crashpad_handler headless_shell
 }
 
 termux_step_make_install() {

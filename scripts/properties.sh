@@ -305,7 +305,7 @@ TERMUX_ANDROID_BUILD_TOOLS_VERSION=33.0.1
 # change TERMUX_PKG_VERSION (and remove TERMUX_PKG_REVISION if necessary) in:
 #   apksigner, d8
 # and trigger rebuild of them
-: "${TERMUX_NDK_VERSION_NUM:="27"}"
+: "${TERMUX_NDK_VERSION_NUM:="28"}"
 : "${TERMUX_NDK_REVISION:="c"}"
 TERMUX_NDK_VERSION="${TERMUX_NDK_VERSION_NUM}${TERMUX_NDK_REVISION}"
 # when changing the above:
@@ -314,8 +314,11 @@ TERMUX_NDK_VERSION="${TERMUX_NDK_VERSION_NUM}${TERMUX_NDK_REVISION}"
 # and update SHA256 sums in scripts/setup-android-sdk.sh
 # check all packages build and run correctly and bump if needed
 
+: "${TERMUX_HOST_LLVM_MAJOR_VERSION:="19"}"
+: "${TERMUX_HOST_LLVM_BASE_DIR:="/usr/lib/llvm-${TERMUX_HOST_LLVM_MAJOR_VERSION}"}"
+
 : "${TERMUX_JAVA_HOME:=/usr/lib/jvm/java-21-openjdk-amd64}"
-export JAVA_HOME=${TERMUX_JAVA_HOME}
+export JAVA_HOME="${TERMUX_JAVA_HOME}"
 
 if [[ "${TERMUX_PACKAGES_OFFLINE-false}" == "true" ]]; then
     export ANDROID_HOME="${TERMUX_PKGS__BUILD__REPO_ROOT_DIR}/build-tools/android-sdk-${TERMUX_SDK_REVISION}"
@@ -1140,6 +1143,13 @@ TERMUX__PREFIX__MULTI_INCLUDE_DIR="$TERMUX__PREFIX/$TERMUX__PREFIX__MULTI_INCLUD
 
 
 ##
+# Termux include subdirectory path under `TERMUX__PREFIX`.
+#
+# Default value: `include`
+##
+TERMUX__PREFIX__INCLUDE_SUBDIR="$TERMUX__PREFIX__BASE_INCLUDE_SUBDIR"
+
+##
 # Termux include directory path under `TERMUX__PREFIX`.
 #
 # Default value: `/data/data/com.termux/files/usr/include` (`$TERMUX__PREFIX__BASE_INCLUDE_DIR`)
@@ -1177,6 +1187,13 @@ TERMUX__PREFIX__MULTI_LIB_SUBDIR="lib32"
 ##
 TERMUX__PREFIX__MULTI_LIB_DIR="$TERMUX__PREFIX/$TERMUX__PREFIX__MULTI_LIB_SUBDIR"
 
+
+##
+# Termux lib subdirectory path under `TERMUX__PREFIX`.
+#
+# Default value: `lib`
+##
+TERMUX__PREFIX__LIB_SUBDIR="$TERMUX__PREFIX__BASE_LIB_SUBDIR"
 
 ##
 # Termux lib directory path under `TERMUX__PREFIX`.

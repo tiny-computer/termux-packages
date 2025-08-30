@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://nodejs.org/
 TERMUX_PKG_DESCRIPTION="Open Source, cross-platform JavaScript runtime environment"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="Yaksh Bariya <thunder-coding@termux.dev>"
-TERMUX_PKG_VERSION=24.2.0
+TERMUX_PKG_VERSION=24.7.0
 TERMUX_PKG_SRCURL=https://nodejs.org/dist/v${TERMUX_PKG_VERSION}/node-v${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=40143d43efbdeeb9537995f532126c494d63a31da332acb5022f76f00afc62ab
+TERMUX_PKG_SHA256=cf74a77753b629ffebd2e38fb153a21001b2b7a3c365c0ec7332b120b98c7251
 # thunder-coding: don't try to autoupdate nodejs, that thing takes 2 whole hours to build for a single arch, and requires a lot of patch updates everytime. Also I run tests everytime I update it to ensure least bugs
 TERMUX_PKG_AUTO_UPDATE=false
 # Note that we do not use a shared libuv to avoid an issue with the Android
@@ -37,9 +37,9 @@ termux_step_host_build() {
 		dfacb46bfe4747410472ce3e1144bf28a102feeaa4e3875bac9b4c6cf30f4f3e
 	tar xf $TERMUX_PKG_CACHEDIR/$ICU_TAR
 	cd icu/source
-	export CC=/usr/bin/clang-18
-	export CXX=/usr/bin/clang++-18
-	export LD=/usr/bin/clang++-18
+	export CC="$TERMUX_HOST_LLVM_BASE_DIR/bin/clang"
+	export CXX="$TERMUX_HOST_LLVM_BASE_DIR/bin/clang++"
+	export LD="$TERMUX_HOST_LLVM_BASE_DIR/bin/clang++"
 	if [ "$TERMUX_ARCH_BITS" = 32 ]; then
 		./configure --prefix $TERMUX_PKG_HOSTBUILD_DIR/icu-installed \
 			--disable-samples \

@@ -2,13 +2,13 @@ TERMUX_PKG_HOMEPAGE=https://openjdk.java.net
 TERMUX_PKG_DESCRIPTION="Java development kit and runtime"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="21.0.7"
-TERMUX_PKG_REVISION=2
+TERMUX_PKG_VERSION="21.0.8"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=https://github.com/openjdk/jdk21u/archive/refs/tags/jdk-${TERMUX_PKG_VERSION}-ga.tar.gz
-TERMUX_PKG_SHA256=d8637e7d6fece0757b7fada49d32d0b3334a15a110445acef8cfea64b4672ca2
+TERMUX_PKG_SHA256=e0758d17991a51967931854523ca6e287eb4240f0b3e3bc231b2ddb0e77cf71b
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_DEPENDS="libandroid-shmem, libjpeg-turbo, zlib, littlecms"
-TERMUX_PKG_BUILD_DEPENDS="cups, fontconfig, libxrandr, libxt, xorgproto"
+TERMUX_PKG_DEPENDS="libandroid-shmem, libjpeg-turbo, zlib, littlecms, alsa-plugins"
+TERMUX_PKG_BUILD_DEPENDS="cups, fontconfig, libxrandr, libxt, xorgproto, alsa-lib"
 TERMUX_PKG_BREAKS="openjdk"
 TERMUX_PKG_REPLACES="openjdk"
 TERMUX_PKG_PROVIDES="openjdk"
@@ -17,9 +17,8 @@ TERMUX_PKG_RECOMMENDS="ca-certificates-java, openjdk-21-x, resolv-conf"
 TERMUX_PKG_SUGGESTS="cups"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_HAS_DEBUG=false
-# currently zgc and shenandoahgc would be auto enabled in server variant,
-# while these features is not supported on arm.
-# only leave lto here.
+# enable lto, but do not explicitly enable zgc or shenandoahgc because they
+# are automatically enabled for x86, but are not supported for arm.
 __jvm_features="link-time-opt"
 
 termux_pkg_auto_update() {
@@ -80,6 +79,9 @@ termux_step_configure() {
 		--with-fontconfig-include="$TERMUX_PREFIX/include" \
 		--with-freetype-include="$TERMUX_PREFIX/include/freetype2" \
 		--with-freetype-lib="$TERMUX_PREFIX/lib" \
+		--with-alsa="$TERMUX_PREFIX" \
+		--with-alsa-include="$TERMUX_PREFIX/include/alsa" \
+		--with-alsa-lib="$TERMUX_PREFIX/lib" \
 		--with-x="$TERMUX_PREFIX/include/X11" \
 		--x-includes="$TERMUX_PREFIX/include/X11" \
 		--x-libraries="$TERMUX_PREFIX/lib" \
@@ -95,12 +97,12 @@ termux_step_configure() {
 		OBJDUMP="$OBJDUMP" \
 		STRIP="$STRIP" \
 		CXXFILT="llvm-cxxfilt" \
-		BUILD_CC="/usr/bin/clang-18" \
-		BUILD_CXX="/usr/bin/clang++-18" \
-		BUILD_NM="/usr/bin/llvm-nm-18" \
-		BUILD_AR="/usr/bin/llvm-ar-18" \
-		BUILD_OBJCOPY="/usr/bin/llvm-objcopy-18" \
-		BUILD_STRIP="/usr/bin/llvm-strip-18" \
+		BUILD_CC="$TERMUX_HOST_LLVM_BASE_DIR/bin/clang" \
+		BUILD_CXX="$TERMUX_HOST_LLVM_BASE_DIR/bin/clang++" \
+		BUILD_NM="$TERMUX_HOST_LLVM_BASE_DIR/bin/llvm-nm" \
+		BUILD_AR="$TERMUX_HOST_LLVM_BASE_DIR/bin/llvm-ar" \
+		BUILD_OBJCOPY="$TERMUX_HOST_LLVM_BASE_DIR/bin/llvm-objcopy" \
+		BUILD_STRIP="$TERMUX_HOST_LLVM_BASE_DIR/bin/llvm-strip" \
 		--with-jobs=$TERMUX_PKG_MAKE_PROCESSES
 }
 

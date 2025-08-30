@@ -236,8 +236,8 @@ source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_handle_host_build.sh"
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_host_build.sh"
 
 # Setup a standalone Android NDK toolchain. Called from termux_step_setup_toolchain.
-# shellcheck source=scripts/build/toolchain/termux_setup_toolchain_27c.sh
-source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_27c.sh"
+# shellcheck source=scripts/build/toolchain/termux_setup_toolchain_28c.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_28c.sh"
 
 # Runs termux_step_setup_toolchain_${TERMUX_NDK_VERSION}. Not to be overridden by packages.
 # shellcheck source=scripts/build/termux_step_setup_toolchain.sh
@@ -348,6 +348,11 @@ source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_create_debscripts.sh"
 # shellcheck source=scripts/build/termux_step_create_debian_package.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_create_debian_package.sh"
 
+# Process 'update-alternatives' entries from `.alternatives` files.
+# Not to be overridden by package scripts.
+# shellcheck source=scripts/build/termux_step_update_alternatives.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_update_alternatives.sh"
+
 # Finish the build. Not to be overridden by package scripts.
 # shellcheck source=scripts/build/termux_step_finish_build.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_finish_build.sh"
@@ -372,7 +377,9 @@ termux_conf_multilib_vars() {
 		"x86_64") TERMUX_ARCH="i686";;
 		*) termux_error_exit "It is impossible to set multilib arch for ${TERMUX_ARCH} arch."
 	esac
+	TERMUX__PREFIX__INCLUDE_SUBDIR="$TERMUX__PREFIX__MULTI_INCLUDE_SUBDIR"
 	TERMUX__PREFIX__INCLUDE_DIR="$TERMUX__PREFIX__MULTI_INCLUDE_DIR"
+	TERMUX__PREFIX__LIB_SUBDIR="$TERMUX__PREFIX__MULTI_LIB_SUBDIR"
 	TERMUX__PREFIX__LIB_DIR="$TERMUX__PREFIX__MULTI_LIB_DIR"
 }
 

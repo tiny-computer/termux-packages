@@ -25,7 +25,7 @@ check_package_license() {
 			EUPL-1.1|EUPL-1.2|Eiffel-2.0|Entessa-1.0|Facebook-Platform|Fair|Frameworx-1.0);;
 			GPL-2.0|GPL-2.0-only|GPL-2.0-or-later);;
 			GPL-3.0|GPL-3.0-only|GPL-3.0-or-later);;
-			Go|HSQLDB|Historical|HPND|IBMPL-1.0|IJG|IPAFont-1.0|ISC|IU-Extreme-1.1.1);;
+			Go|hdparm|HSQLDB|Historical|HPND|IBMPL-1.0|IJG|IPAFont-1.0|ISC|IU-Extreme-1.1.1);;
 			ImageMagick|JA-SIG|JSON|JTidy);;
 			LGPL-2.0|LGPL-2.0-only|LGPL-2.0-or-later);;
 			LGPL-2.1|LGPL-2.1-only|LGPL-2.1-or-later);;
@@ -253,7 +253,7 @@ lint_package() {
 
 		# Certain fields may be API-specific.
 		# Using API 24 here.
-		TERMUX_PKG_API_LEVEL=29
+		TERMUX_PKG_API_LEVEL=30
 
 		# shellcheck source=/dev/null
 		. "$package_script"

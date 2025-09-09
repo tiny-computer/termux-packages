@@ -19,7 +19,3 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DSYSTEM_BOOST=ON
 -DSUPERNOVA=OFF
 "
-
-termux_step_pre_configure() {
-	LDFLAGS+=" -landroid-glob"
-}

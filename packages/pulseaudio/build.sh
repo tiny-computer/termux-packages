@@ -4,7 +4,7 @@ TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_SRCURL=git+https://github.com/pulseaudio/pulseaudio
 TERMUX_PKG_VERSION="17.0"
-TERMUX_PKG_REVISION=2
+TERMUX_PKG_REVISION=3
 TERMUX_PKG_DEPENDS="dbus, libandroid-execinfo, libc++, libltdl, libsndfile, libsoxr, libwebrtc-audio-processing, speexdsp"
 TERMUX_PKG_BREAKS="libpulseaudio-dev, libpulseaudio"
 TERMUX_PKG_REPLACES="libpulseaudio-dev, libpulseaudio"
@@ -20,6 +20,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="-D alsa=disabled
 TERMUX_PKG_CONFFILES="etc/pulse/client.conf etc/pulse/daemon.conf etc/pulse/default.pa etc/pulse/system.pa"
 
 termux_step_pre_configure() {
+	rm $TERMUX_PREFIX/include/iconv.h
 	# Our aaudio sink module needs libaaudio.so from a later android api version:
 	if [ $TERMUX_PKG_API_LEVEL -lt 26 ]; then
 		local _libdir="$TERMUX_PKG_TMPDIR/libaaudio"

@@ -5,6 +5,8 @@ TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION=2.4.3
 TERMUX_PKG_SRCURL=https://www.samba.org/ftp/talloc/talloc-${TERMUX_PKG_VERSION}.tar.gz
 TERMUX_PKG_SHA256=dc46c40b9f46bb34dd97fe41f548b0e8b247b77a918576733c528e83abd854dd
+TERMUX_PKG_BREAKS="libtalloc-dev"
+TERMUX_PKG_REPLACES="libtalloc-dev"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_configure() {

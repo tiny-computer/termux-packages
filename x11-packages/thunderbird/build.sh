@@ -2,14 +2,19 @@ TERMUX_PKG_HOMEPAGE=https://www.thunderbird.net
 TERMUX_PKG_DESCRIPTION="Unofficial Thunderbird email client"
 TERMUX_PKG_LICENSE="MPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="142.0"
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION="146.0.1"
 TERMUX_PKG_SRCURL="https://archive.mozilla.org/pub/thunderbird/releases/${TERMUX_PKG_VERSION}/source/thunderbird-${TERMUX_PKG_VERSION}.source.tar.xz"
-TERMUX_PKG_SHA256=18f625452d2001ef1b5a1b47a77521c73c83e1bae824f783a0965d229c434e37
-TERMUX_PKG_DEPENDS="ffmpeg, fontconfig, freetype, gdk-pixbuf, glib, gtk3, libandroid-shmem, libandroid-spawn, libc++, libcairo, libevent, libffi, libice, libicu, libjpeg-turbo, libnspr, libnss, libotr, libpixman, libsm, libvpx, libwebp, libx11, libxcb, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, libxtst, pango, pulseaudio, zlib"
+TERMUX_PKG_SHA256=816c7add658c208ef6057ef86643ed9ecc0f4daafcae592a1ffe38d1a2108b38
+TERMUX_PKG_DEPENDS="botan3, ffmpeg, fontconfig, freetype, gdk-pixbuf, glib, gtk3, libandroid-shmem, libandroid-spawn, libc++, libcairo, libevent, libffi, libice, libicu, libjpeg-turbo, libnspr, libnss, libotr, libpixman, libsm, libvpx, libwebp, libx11, libxcb, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, libxtst, pango, pulseaudio, zlib"
 TERMUX_PKG_BUILD_DEPENDS="libcpufeatures, libice, libsm"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
+
+# NOTE:
+# Most of Thunderbird's patches are shared with Firefox.
+# To avoid issues and reduce duplication the shared 00XX-${topic}.patch files
+# are symlinks to the patches in x11-packages/firefox
+# Thunderbird specific patches should start at 1001-${topic}.patch
 
 termux_pkg_auto_update() {
 	# https://archive.mozilla.org/pub/thunderbird/releases/latest/README.txt
@@ -47,6 +52,14 @@ termux_step_post_get_source() {
 	local f="media/ffvpx/config_unix_aarch64.h"
 	echo "Applying sed substitution to ${f}"
 	sed -E '/^#define (CONFIG_LINUX_PERF|HAVE_SYSCTL) /s/1$/0/' -i ${f}
+
+	# Update Cargo.toml to use the patched cc
+	sed -i 's|^\(\[patch\.crates-io\]\)$|\1\ncc = { path = "third_party/rust/cc" }|g' \
+		Cargo.toml
+	(
+		termux_setup_rust
+		cargo update -p cc
+	)
 }
 
 termux_step_pre_configure() {

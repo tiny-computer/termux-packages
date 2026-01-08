@@ -1,6 +1,15 @@
---- ./node.gyp.orig	2025-06-10 09:31:14.066774171 +0530
-+++ ./node.gyp	2025-06-10 14:33:02.935820287 +0530
-@@ -538,7 +538,8 @@
+--- ./node.gyp.orig	2025-11-26 23:46:03.696854242 +0530
++++ ./node.gyp	2025-12-03 21:00:02.566150699 +0530
+@@ -527,7 +527,7 @@
+           '-Wl,-bnoerrmsg',
+         ],
+       }],
+-      ['OS=="linux" and clang==1', {
++      ['(OS=="linux" or OS=="android") and clang==1', {
+         'libraries': ['-latomic'],
+       }],
+     ],
+@@ -568,7 +568,8 @@
        ],
  
        'sources': [
@@ -10,7 +19,7 @@
        ],
  
        'dependencies': [
-@@ -1035,303 +1036,7 @@
+@@ -1063,314 +1064,6 @@
          },
        ],
      }, # node_lib_target_name
@@ -33,7 +42,7 @@
 -        'deps/uv/include',
 -        'test/cctest',
 -      ],
- 
+-
 -      'defines': [
 -        'NODE_ARCH="<(target_arch)"',
 -        'NODE_PLATFORM="<(OS)"',
@@ -63,7 +72,6 @@
 -      'dependencies': [
 -        '<(node_lib_target_name)',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
 -      ],
 -      'includes': [
 -        'node.gypi'
@@ -74,7 +82,6 @@
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -        'test/cctest',
 -      ],
 -      'defines': [
@@ -87,6 +94,10 @@
 -        'test/fuzzers/fuzz_ClientHelloParser.cc',
 -      ],
 -      'conditions': [
+-        [ 'node_shared_uvwasi=="false"', {
+-          'dependencies': [ 'deps/uvwasi/uvwasi.gyp:uvwasi' ],
+-          'include_dirs': [ 'deps/uvwasi/include' ],
+-        }],
 -        ['OS=="linux" or OS=="openharmony"', {
 -          'ldflags': [ '-fsanitize=fuzzer' ]
 -        }],
@@ -107,7 +118,6 @@
 -        '<(node_lib_target_name)',
 -        'deps/googletest/googletest.gyp:gtest_prod',
 -        'deps/histogram/histogram.gyp:histogram',
--        'deps/uvwasi/uvwasi.gyp:uvwasi',
 -        'deps/nbytes/nbytes.gyp:nbytes',
 -      ],
 -      'includes': [
@@ -119,7 +129,6 @@
 -        'deps/v8/include',
 -        'deps/cares/include',
 -        'deps/uv/include',
--        'deps/uvwasi/include',
 -        'test/cctest',
 -      ],
 -      'defines': [
@@ -132,6 +141,10 @@
 -        'test/fuzzers/fuzz_strings.cc',
 -      ],
 -      'conditions': [
+-        [ 'node_shared_uvwasi=="false"', {
+-          'dependencies': [ 'deps/uvwasi/uvwasi.gyp:uvwasi' ],
+-          'include_dirs': [ 'deps/uvwasi/include' ],
+-        }],
 -        ['OS=="linux" or OS=="openharmony"', {
 -          'ldflags': [ '-fsanitize=fuzzer' ]
 -        }],
@@ -311,83 +324,13 @@
 -        }],
 -      ]
 -    }, # overlapped-checker
+-    {
+-      'target_name': 'nop',
+-      'type': 'executable',
+-      'sources': [
+-        'test/nop/nop.c',
+-      ]
+-    }, # nop
      {
        'target_name': 'node_js2c',
        'type': 'executable',
-@@ -1368,76 +1073,6 @@
-         }],
-       ]
-     },
--    {
--      'target_name': 'node_mksnapshot',
--      'type': 'executable',
--
--      'dependencies': [
--        '<(node_lib_target_name)',
--        'deps/histogram/histogram.gyp:histogram',
--        'deps/nbytes/nbytes.gyp:nbytes',
--      ],
--
--      'includes': [
--        'node.gypi'
--      ],
--
--      'include_dirs': [
--        'src',
--        'tools/msvs/genfiles',
--        'deps/v8/include',
--        'deps/cares/include',
--        'deps/uv/include',
--      ],
--
--      'defines': [ 'NODE_WANT_INTERNALS=1' ],
--
--      'sources': [
--        'src/node_snapshot_stub.cc',
--        'tools/snapshot/node_mksnapshot.cc',
--      ],
--
--      'msvs_settings': {
--        'VCLinkerTool': {
--          'EnableCOMDATFolding': '1', # /OPT:NOICF
--        },
--      },
--
--      'conditions': [
--        ['node_write_snapshot_as_array_literals=="true"', {
--          'defines': [ 'NODE_MKSNAPSHOT_USE_ARRAY_LITERALS=1' ],
--        }],
--        [ 'node_use_openssl=="true"', {
--          'dependencies': [
--            'deps/ncrypto/ncrypto.gyp:ncrypto',
--          ],
--          'defines': [
--            'HAVE_OPENSSL=1',
--          ],
--        }],
--        [ 'node_use_node_code_cache=="true"', {
--          'defines': [
--            'NODE_USE_NODE_CODE_CACHE=1',
--          ],
--        }],
--        ['v8_enable_inspector==1', {
--          'defines': [
--            'HAVE_INSPECTOR=1',
--          ],
--        }],
--        ['OS=="win"', {
--          'libraries': [
--            'Dbghelp.lib',
--            'winmm.lib',
--            'Ws2_32.lib',
--          ],
--        }],
--        # Avoid excessive LTO
--        ['enable_lto=="true"', {
--          'ldflags': [ '-fno-lto' ],
--        }],
--      ],
--    }, # node_mksnapshot
-   ], # end targets
- 
-   'conditions': [

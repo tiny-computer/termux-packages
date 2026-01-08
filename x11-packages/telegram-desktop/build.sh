@@ -4,9 +4,9 @@ TERMUX_PKG_DESCRIPTION="Telegram Desktop Client"
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="LICENSE, LEGAL"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="6.1.3"
+TERMUX_PKG_VERSION="6.4.1"
 TERMUX_PKG_SRCURL=https://github.com/telegramdesktop/tdesktop/releases/download/v$TERMUX_PKG_VERSION/tdesktop-$TERMUX_PKG_VERSION-full.tar.gz
-TERMUX_PKG_SHA256=1c6a531abf106d5f4b6d9179fc802f93cb8ab62630cc07e73d64688780125869
+TERMUX_PKG_SHA256=ddcf3e2da86d9e5288b6d4f62a5d8079b0cfdc8b6887aff56bf54bef708f48f5
 TERMUX_PKG_DEPENDS="abseil-cpp, boost, ffmpeg, glib, hicolor-icon-theme, hunspell, kf6-kcoreaddons, libandroid-shmem, libc++, libdispatch, libdrm, libjxl, liblz4, libminizip, protobuf, librnnoise, libsigc++-3.0, libx11, libxcomposite, libxdamage, libxrandr, libxtst, openal-soft, opengl, openh264, openssl, pipewire, pulseaudio, qt6-qtbase, qt6-qtimageformats, qt6-qtsvg, xxhash, zlib"
 TERMUX_PKG_BUILD_DEPENDS="ada, aosp-libs, boost-headers, glib-cross, qt6-qtbase-cross-tools"
 TERMUX_PKG_VERSIONED_GIR=false
@@ -82,9 +82,15 @@ __cppgir_build() {
 	git clone https://github.com/scipy/boost-headers-only
 	mkdir -p cppgir-host-build
 	pushd cppgir-host-build
+	local _extra_args=""
+	if [ "$TERMUX_ON_DEVICE_BUILD" = true ]; then
+		_extra_args+=" -DGIR_DEFAULT_DIRS=$TERMUX_PREFIX/share"
+	fi
 	cmake \
+		-DCMAKE_CXX_FLAGS="-DBOOST_NO_CXX98_FUNCTION_BASE=1" \
 		-DCMAKE_INSTALL_PREFIX=$TERMUX_PKG_HOSTBUILD_DIR/cppgir-host-build/prefix \
 		-DBoost_INCLUDE_DIR=$TERMUX_PKG_HOSTBUILD_DIR/boost-headers-only \
+		$_extra_args \
 		$TERMUX_PKG_SRCDIR/cmake/external/glib/cppgir
 	make -j $TERMUX_PKG_MAKE_PROCESSES cppgir
 	make install

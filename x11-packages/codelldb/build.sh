@@ -2,12 +2,12 @@ TERMUX_PKG_HOMEPAGE=https://github.com/vadimcn/codelldb
 TERMUX_PKG_DESCRIPTION="A native debugger extension for VSCode based on LLDB"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.11.5"
-TERMUX_PKG_REVISION=2
+TERMUX_PKG_VERSION="1.12.1"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL="https://github.com/vadimcn/codelldb/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
-TERMUX_PKG_SHA256=87ff4a444dbd0c6c9bcf1ac5527485355a400e9bee2386d7b0d33c70eeca188e
+TERMUX_PKG_SHA256=5d6dbf96ca5b030a2f011de84148953d8527eaba5d38cb16e56d68905b9a2f67
 TERMUX_PKG_AUTO_UPDATE=true
-# lldb does not support 32-bit
+# codelldb does not work properly on 32-bit Android
 TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 TERMUX_PKG_DEPENDS="lldb"
 TERMUX_CMAKE_BUILD="Unix Makefiles"
@@ -61,8 +61,9 @@ termux_step_pre_configure() {
 }
 
 termux_step_make_install() {
-	# adapter binary for main package
+	# adapter binary and launcher binary for main package
 	install -Dm700 -t "$TERMUX_PREFIX/bin" "$TERMUX_PKG_BUILDDIR/adapter/codelldb"
+	install -Dm700 -t "$TERMUX_PREFIX/bin" "$TERMUX_PKG_BUILDDIR/bin/codelldb-launch"
 
 	# python module for main package
 	local codelldb_python_dest="$TERMUX_PYTHON_HOME/site-packages/codelldb/"

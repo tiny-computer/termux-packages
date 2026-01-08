@@ -1,6 +1,6 @@
 --- a/scripts/make-config.sh
 +++ b/scripts/make-config.sh
-@@ -601,7 +601,7 @@
+@@ -602,7 +604,7 @@
  [[ -z $MACOS ]] && LDFLAGS_PTHREAD="-pthread"
  
  # External libraries

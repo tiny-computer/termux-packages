@@ -2,14 +2,12 @@ TERMUX_PKG_HOMEPAGE=https://github.com/yt-dlp/yt-dlp
 TERMUX_PKG_DESCRIPTION="A youtube-dl fork with additional features and fixes"
 TERMUX_PKG_LICENSE="Unlicense"
 TERMUX_PKG_MAINTAINER="Joshua Kahn @TomJo2000"
-TERMUX_PKG_VERSION="2025.12.08"
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION="2026.01.31"
 TERMUX_PKG_SRCURL=https://github.com/yt-dlp/yt-dlp/archive/refs/tags/$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=10bec5b2bfb367263e7e46ddb69187204506f9d67b7f01bb499d07fa0d54d4b7
+TERMUX_PKG_SHA256=8a9a82ab5a222fb88ace30d94521150b03c66910b3a5830a3f1b32fcc5a94893
 TERMUX_PKG_DEPENDS="libc++, libexpat, openssl, python, python-brotli, python-pip, python-pycryptodomex"
 TERMUX_PKG_RECOMMENDS="ffmpeg, yt-dlp-ejs"
-TERMUX_PKG_PYTHON_COMMON_DEPS="hatchling, wheel"
-TERMUX_PKG_PYTHON_TARGET_DEPS="mutagen, pycryptodomex, websockets, certifi, brotli, requests, urllib3"
+TERMUX_PKG_PYTHON_COMMON_BUILD_DEPS="hatchling, wheel"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_HOSTBUILD=true
 TERMUX_PKG_AUTO_UPDATE=true
@@ -48,12 +46,4 @@ termux_step_make_install() {
 		--js-runtimes node
 		EOF
 	fi
-}
-
-termux_step_create_debscripts() {
-	cat <<- EOF > ./postinst
-	#!$TERMUX_PREFIX/bin/sh
-	echo "Installing dependencies through pip..."
-	pip3 install ${TERMUX_PKG_PYTHON_TARGET_DEPS//, / }
-	EOF
 }

@@ -263,9 +263,6 @@ PACKAGES+=" libxft-dev"
 PACKAGES+=" libxt-dev"
 PACKAGES+=" xbitmaps"
 
-# Needed by pypy
-PACKAGES+=" qemu-user-static"
-
 # Required by cava
 PACKAGES+=" xxd"
 
@@ -301,6 +298,9 @@ PACKAGES+=" libexpat1:i386"
 PACKAGES+=" libxkbfile-dev"
 PACKAGES+=" libsecret-1-dev"
 PACKAGES+=" libkrb5-dev"
+
+# Required by aosp-libs
+PACKAGES+=" openssh-client"
 
 # Required by wine-stable
 PACKAGES+=" libfreetype-dev:i386"
@@ -364,7 +364,11 @@ $SUDO chown -R "$(whoami)" "$TERMUX__PREFIX"
 $SUDO mkdir -p "$TERMUX_APP__DATA_DIR"
 $SUDO chown -R "$(whoami)" "${TERMUX_APP__DATA_DIR%"${TERMUX_APP__DATA_DIR#/*/}"}" # Get `/path/` from `/path/to/app__data_dir`.
 
-$SUDO ln -sf /data/data/com.termux/files/usr/opt/aosp /system
+# Initial symbolic link in the symbolic link chain for packages
+# that have a build dependency on 'aosp-libs'; see scripts/build/termux_step_override_config_scripts.sh
+# and scripts/build/setup/termux_setup_proot.sh for more information
+$SUDO ln -sf "$TERMUX_APP__DATA_DIR/aosp/system" /system
+$SUDO ln -sf "$TERMUX_APP__DATA_DIR/aosp/apex" /apex
 
 # Install newer pkg-config then what ubuntu provides, as the stock
 # ubuntu version has performance problems with at least protobuf:

@@ -479,7 +479,7 @@ for package_arch in "${TERMUX_ARCHITECTURES[@]}"; do
 #	pull_package nano
 #	pull_package net-tools
 #	pull_package patch
-#	pull_package unzip
+	pull_package zstd
 	pull_package proot
 	pull_package busybox
 	pull_package tar

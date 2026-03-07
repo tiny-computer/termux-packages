@@ -73,6 +73,6 @@ termux_step_make() {
 
 termux_step_make_install() {
 	local _pyv="${TERMUX_PYTHON_VERSION/./}"
-	local _whl="numpy-$TERMUX_PKG_VERSION-cp$_pyv-cp$_pyv-linux_$TERMUX_ARCH.whl"
+	local _whl="numpy-$TERMUX_PKG_VERSION-cp$_pyv-cp$_pyv-android_$TERMUX_ARCH.whl"
 	pip install --no-deps --prefix=$TERMUX_PREFIX --force-reinstall $TERMUX_PKG_SRCDIR/dist/$_whl
 }

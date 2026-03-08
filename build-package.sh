@@ -614,7 +614,7 @@ for (( i=0; i < ${#PACKAGE_LIST[@]}; i++ )); do
 		if [[ "$TERMUX_BUILD_IGNORE_LOCK" != "true" ]]; then
 			flock -n 5 || termux_error_exit "Another build is already running within same environment."
 		fi
-
+		(
 		# Handle 'all' arch:
 		if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ] && [ -n "${TERMUX_ARCH+x}" ] && [ "${TERMUX_ARCH}" = 'all' ]; then
 			for arch in 'aarch64' 'arm' 'x86_64'; do
@@ -723,5 +723,6 @@ for (( i=0; i < ${#PACKAGE_LIST[@]}; i++ )); do
 			termux_error_exit "Unknown packaging format '$TERMUX_PACKAGE_FORMAT'."
 		fi
 		termux_step_finish_build
+		) 5>&-
 	) 5< "$TERMUX_BUILD_LOCK_FILE"
 done

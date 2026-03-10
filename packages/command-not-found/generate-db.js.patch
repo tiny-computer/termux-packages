@@ -1,7 +1,6 @@
-Only in ../../src/: commands-aarch64-termux-root.h
-diff -u -r ./generate-db.js ../../src/generate-db.js
---- ./generate-db.js	2025-07-01 08:12:10.000000000 +0000
-+++ ../../src/generate-db.js	2025-07-05 10:24:11.158542740 +0000
+diff -u -r ../cache/command-not-found-3.4.1/generate-db.js ./generate-db.js
+--- ../cache/command-not-found-3.4.1/generate-db.js	2026-03-08 12:07:11.000000000 +0000
++++ ./generate-db.js	2026-03-09 02:21:59.782807639 +0000
 @@ -1,10 +1,11 @@
  #!/usr/bin/env node
  import { glob, readFile, writeFile } from "node:fs/promises";
@@ -16,21 +15,16 @@ diff -u -r ./generate-db.js ../../src/generate-db.js
  
  const { TERMUX_SCRIPTDIR, TERMUX_PREFIX, TERMUX_ARCH } = process.env;
  
-@@ -140,22 +141,17 @@
+@@ -148,18 +149,16 @@
  
  async function processRepo(repo, repoPath, arch) {
    // Fetch the Contents.gz file for the given architecture from the apt mirror
 -  const url = `${repo.url}/dists/${repo.distribution}/Contents-${arch}.gz`;
--  const response = await fetch(url);
+-  const response = await fetchURL(url);
 +  const command = `curl --silent ${repo.url}/dists/${repo.distribution}/Contents-${arch}.xz | xzcat -`;
-+	console.log(command);
  
--  if (!response.ok) {
--    throw new Error(`${url} returned ${response.status}`);
--  }
--
 -  // Since we are using a gzip file, we need to decompress it
--  const data = await gunzipAsync(await response.arrayBuffer());
+-  const data = await gunzipAsync(await response);
 +  const { error, stdout, stderr } = await execAsync(command, {maxBuffer: 100 * 1024 * 1024});
    // Convert to string and split by new lines
    // Each line is of the format:

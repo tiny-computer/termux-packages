@@ -1,30 +1,28 @@
-TERMUX_PKG_HOMEPAGE=https://www.mozilla.org/firefox
-TERMUX_PKG_DESCRIPTION="Mozilla Firefox web browser"
+TERMUX_PKG_HOMEPAGE=https://librewolf.net/
+TERMUX_PKG_DESCRIPTION="A custom version of Firefox, focused on privacy, security and freedom."
 TERMUX_PKG_LICENSE="MPL-2.0"
-TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="148.0.2"
-TERMUX_PKG_SRCURL="https://archive.mozilla.org/pub/firefox/releases/${TERMUX_PKG_VERSION}/source/firefox-${TERMUX_PKG_VERSION}.source.tar.xz"
-TERMUX_PKG_SHA256=a6cb8e4d5e596cd52475bab9b4d399240f10c4211718b9d72ca6b2e9c9244e90
+TERMUX_PKG_MAINTAINER="@3ls-it"
+TERMUX_PKG_VERSION="148.0.2-2"
+TERMUX_PKG_SRCURL="https://codeberg.org/api/packages/librewolf/generic/librewolf-source/${TERMUX_PKG_VERSION}/librewolf-${TERMUX_PKG_VERSION}.source.tar.gz"
+TERMUX_PKG_SHA256=659e320b09ab5a71a05c3183e0f0592ea79d707f377fb8c301233e299183876c
 # ffmpeg and pulseaudio are dependencies through dlopen(3):
-TERMUX_PKG_DEPENDS="ffmpeg, fontconfig, freetype, gdk-pixbuf, glib, gtk3, libandroid-shmem, libc++, libcairo, libevent, libffi, libice, libicu, libjpeg-turbo, libnspr, libnss, libpixman, libsm, libvpx, libwebp, libx11, libxcb, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, libxtst, pango, pulseaudio, zlib"
+TERMUX_PKG_DEPENDS="ffmpeg, fontconfig, freetype, gdk-pixbuf, glib, gtk3, libandroid-shmem, libandroid-spawn, libc++, libcairo, libevent, libffi, libice, libicu, libjpeg-turbo, libnspr, libnss, libpixman, libsm, libvpx, libwebp, libx11, libxcb, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, libxtst, pango, pulseaudio, zlib"
 TERMUX_PKG_BUILD_DEPENDS="libcpufeatures, libice, libsm"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
 
-# NOTE:
-# Firefox's patches are also used by Thunderbird.
-# To avoid issues and reduce duplication the shared 00XX-${topic}.patch files
-# are symlinked by Thunderbird into x11-packages/thunderbird
-# Firefox specific patches should start at 1001-${topic}.patch
 
 termux_pkg_auto_update() {
-	# https://archive.mozilla.org/pub/firefox/releases/latest/README.txt
+	local api_url="https://codeberg.org/api/v1/repos/librewolf/source/releases?draft=false&pre-release=false"
 	local e=0
-	local api_url="https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"
-	local api_url_r=$(curl -s "${api_url}")
-	local latest_version=$(echo "${api_url_r}" | sed -nE "s/.*firefox-(.*).tar.xz.*/\1/p")
-	[[ -z "${api_url_r}" ]] && e=1
-	[[ -z "${latest_version}" ]] && e=1
+	local latest_version
+	latest_version="$(
+		curl -fsL \
+			-A "Termux update checker 1.1 (github.com/termux/termux-packages)" \
+			-H "accept: application/json" \
+			"$api_url" \
+		| jq -r '.[0].tag_name'
+	)"
 
 	local uptime_now=$(cat /proc/uptime)
 	local uptime_s="${uptime_now//.*}"
@@ -46,7 +44,7 @@ termux_pkg_auto_update() {
 		return
 	fi
 
-	termux_pkg_upgrade_version "${latest_version}"
+	termux_pkg_upgrade_version "$latest_version"
 }
 
 termux_step_post_get_source() {
@@ -76,7 +74,7 @@ termux_step_pre_configure() {
 		export CARGO_TARGET_${env_host}_RUSTFLAGS+=" -C debuginfo=1"
 	fi
 
-	cargo install cbindgen
+	cargo install cbindgen --locked
 
 	export HOST_CC=$(command -v clang)
 	export HOST_CXX=$(command -v clang++)
@@ -88,7 +86,7 @@ termux_step_pre_configure() {
 
 	# https://reviews.llvm.org/D141184
 	CXXFLAGS+=" -U__ANDROID__ -D_LIBCPP_HAS_NO_C11_ALIGNED_ALLOC"
-	LDFLAGS+=" -landroid-shmem -llog"
+	LDFLAGS+=" -landroid-shmem -landroid-spawn -llog"
 
 	if [ "$TERMUX_ARCH" = "arm" ]; then
 		# For symbol android_getCpuFeatures
@@ -102,11 +100,13 @@ termux_step_configure() {
 		cd $TERMUX_PKG_SRCDIR
 	fi
 
+	# There can be only one!
+	rm -f .mozconfig mozconfig
 	sed \
 		-e "s|@TERMUX_HOST_PLATFORM@|${TERMUX_HOST_PLATFORM}|" \
 		-e "s|@TERMUX_PREFIX@|${TERMUX_PREFIX}|" \
 		-e "s|@CARGO_TARGET_NAME@|${CARGO_TARGET_NAME}|" \
-		$TERMUX_PKG_BUILDER_DIR/mozconfig.cfg > .mozconfig
+		"$TERMUX_PKG_BUILDER_DIR/mozconfig.cfg" > .mozconfig
 
 	if [ "$TERMUX_DEBUG_BUILD" = true ]; then
 		cat >>.mozconfig - <<END
@@ -126,11 +126,12 @@ termux_step_make() {
 termux_step_make_install() {
 	./mach install
 
-	install -Dm644 -t "${TERMUX_PREFIX}/share/applications" "${TERMUX_PKG_BUILDER_DIR}/firefox.desktop"
+	install -Dm644 -t "${TERMUX_PREFIX}/share/applications" "${TERMUX_PKG_BUILDER_DIR}/librewolf.desktop"
 
-	# Install icons as Arch Linux does
-	local i theme=official
-	for i in 16 22 24 32 48 64 128 256; do
+	# Install icons for LibreWolf branding
+	local i theme=librewolf
+	# LibreWolf icon sizes: 16, 31, 48, 64, 128
+	for i in 16 32 48 64 128; do
 		install -Dvm644 "browser/branding/$theme/default$i.png" \
 			"$TERMUX_PREFIX/share/icons/hicolor/${i}x${i}/apps/$TERMUX_PKG_NAME.png"
 	done
@@ -146,7 +147,7 @@ termux_step_post_make_install() {
 	# https://github.com/termux/termux-packages/issues/18429
 	# https://phabricator.services.mozilla.com/D181687
 	# Android 8.x and older not support "-z pack-relative-relocs" / DT_RELR
-	local r=$("${READELF}" -d "${TERMUX_PREFIX}/bin/firefox")
+	local r=$("${READELF}" -d "${TERMUX_PREFIX}/bin/librewolf")
 	if [[ -n "$(echo "${r}" | grep "(RELR)")" ]]; then
 		termux_error_exit "DT_RELR is unsupported on Android 8.x and older\n${r}"
 	fi

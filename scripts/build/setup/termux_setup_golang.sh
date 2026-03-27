@@ -3,9 +3,13 @@ termux_setup_golang() {
 	export GOPATH="${TERMUX_COMMON_CACHEDIR}/go-path" GOCACHE="${TERMUX_COMMON_CACHEDIR}/go-build"
 	mkdir -p "$GOPATH" "$GOCACHE"
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
-		local TERMUX_GO_VERSION=go1.25.6
-		local TERMUX_GO_SHA256=f022b6aad78e362bcba9b0b94d09ad58c5a70c6ba3b7582905fababf5fe0181a
+		local TERMUX_GO_VERSION=go1.26.1
+		local TERMUX_GO_SHA256=031f088e5d955bab8657ede27ad4e3bc5b7c1ba281f05f245bcc304f327c987a
 		local TERMUX_GO_PLATFORM=linux-amd64
+
+		# Need to be on latest go version to avoid risk of newer go version in go.mod
+		# leading to a prebuilt toolchain (which lacks the Termux patches):
+		(curl 'https://go.dev/VERSION?m=text' | grep -q $TERMUX_GO_VERSION) || termux_error_exit "Not on latest go version. Using $TERMUX_GO_VERSION"
 
 		local TERMUX_BUILDGO_FOLDER
 		if [ "${TERMUX_PACKAGES_OFFLINE-false}" = "true" ]; then
@@ -33,7 +37,13 @@ termux_setup_golang() {
 		cd go
 		local patch_file
 		for patch_file in $TERMUX_SCRIPTDIR/packages/golang/*.patch; do
-			patch -p1 < $patch_file
+		sed \
+			-e "s%\@TERMUX_BASE_DIR\@%${TERMUX_BASE_DIR}%g" \
+			-e "s%\@TERMUX_CACHE_DIR\@%${TERMUX_CACHE_DIR}%g" \
+			-e "s%\@TERMUX_HOME\@%${TERMUX_ANDROID_HOME}%g" \
+			-e "s%\@TERMUX_PREFIX\@%${TERMUX_PREFIX}%g" \
+			-e "s%\@TERMUX_PREFIX_CLASSICAL\@%${TERMUX_PREFIX_CLASSICAL}%g" \
+			"$patch_file" | patch -p1
 		done
 		cd ..
 		mv go "$TERMUX_BUILDGO_FOLDER"

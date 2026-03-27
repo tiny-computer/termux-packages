@@ -20,6 +20,19 @@ subpkg_to_parent_pkg = {}
 
 repo_json = json.load(open("repo.json"))
 
+
+def is_package_built(package_name, local_version, arch):
+    deb_to_build = f"{package_name}_{local_version}_{arch}.deb"
+    deb_to_build_arch_all = f"{package_name}_{local_version}_all.deb"
+    for path in [f"output/{deb_to_build}", f"output/{deb_to_build_arch_all}"]:
+        if os.path.exists(path):
+            print(
+                f"{package_name}@{local_version} {arch} Already built - {path}"
+            )
+            return True
+    return False
+
+
 for arch in supported_arches:
     name_to_local_version = {}
     proc = subprocess.run(
@@ -84,12 +97,7 @@ for arch in supported_arches:
                     ):
                         if current_is_static:
                             current_package += "-static"
-                        deb_to_build = f"{current_package}_{local_version}_{arch}.deb"
-                        if os.path.exists(f"output/{deb_to_build}"):
-                            print(
-                                f"{package_to_report} {arch} Already built - output/{deb_to_build}"
-                            )
-                        else:
+                        if not is_package_built(current_package, local_version, arch):
                             print(
                                 f"{package_to_report} {arch} Version mismatch - local={local_version}, remote={remote_version} (from {current_package})"
                             )
@@ -103,8 +111,11 @@ for arch in supported_arches:
                 if pkg in subpkg_to_parent_pkg:
                     parent_pkg = subpkg_to_parent_pkg[pkg]
                     if parent_pkg not in already_reported:
-                        already_reported.add(parent_pkg)
-                        print(f"{parent_pkg} {arch} Needs to be rebuilt as subpackage {pkg} exists locally but is not published")
+                        if not is_package_built(parent_pkg, name_to_local_version[parent_pkg], arch):
+                            already_reported.add(parent_pkg)
+                            print(f"{parent_pkg} {arch} Needs to be rebuilt as subpackage {pkg} exists locally but is not published")
                 elif pkg not in already_reported:
-                    already_reported.add(pkg)
-                    print(f"{pkg} {arch} Package exists locally but is not published")
+                    if not is_package_built(pkg, name_to_local_version[pkg], arch):
+                        already_reported.add(pkg)
+                        print(f"{pkg} {arch} Package exists locally but is not published")
+

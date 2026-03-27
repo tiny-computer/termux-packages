@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://deno.land/
 TERMUX_PKG_DESCRIPTION="A modern runtime for JavaScript and TypeScript"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@licy183"
-TERMUX_PKG_VERSION="1:2.6.6"
+TERMUX_PKG_VERSION="1:2.7.5"
 TERMUX_PKG_SRCURL=https://github.com/denoland/deno/releases/download/v${TERMUX_PKG_VERSION:2}/deno_src.tar.gz
-TERMUX_PKG_SHA256=edc3a61420a8adaf35079f377b3dc80b76226f1ebdabd2306144b1171086892d
+TERMUX_PKG_SHA256=40fcc09009fbfcf925776721dbbc6e40a5979380f8d12fb01429b6f6a3e94dd2
 TERMUX_PKG_DEPENDS="libandroid-stub, libffi, libsqlite, zlib"
 TERMUX_PKG_BUILD_DEPENDS="aosp-libs"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -22,6 +22,14 @@ termux_step_get_source() {
 	termux_download "${TERMUX_PKG_SRCURL}" "$file" "${TERMUX_PKG_SHA256}"
 	mkdir -p "$TERMUX_PKG_SRCDIR"
 	tar xf "$file" -C "$TERMUX_PKG_SRCDIR" --strip-components=1
+}
+
+termux_step_post_get_source() {
+	# Use default-features in `libz-sys`
+	sed -i '/^libz-sys *=/ s/, *default-features *= *false//' Cargo.toml
+
+	# Remove "bundled" feature in `rusqlite`
+	sed -i '/^rusqlite.*features/ s/"bundled", \?//' Cargo.toml
 }
 
 termux_step_pre_configure() {
@@ -208,8 +216,10 @@ termux_step_make() {
 	fi
 
 	local _release_opt="--release"
+	local _folder="release"
 	if [ "$TERMUX_DEBUG_BUILD" = "true" ]; then
 		_release_opt=
+		_folder="debug"
 	fi
 
 	# Prepare source to build cli snapshot generator
@@ -234,7 +244,7 @@ termux_step_make() {
 	termux_setup_proot
 	termux-proot-run env LD_PRELOAD= LD_LIBRARY_PATH= \
 		OUT_DIR="$_deno_prebuilt_snapshot_dir" TARGET="$CARGO_TARGET_NAME" \
-		"$TERMUX_PKG_SRCDIR"/target/$CARGO_TARGET_NAME/release/deno_snapshots
+		"$TERMUX_PKG_SRCDIR"/target/$CARGO_TARGET_NAME/$_folder/deno_snapshots
 
 	# Recover source
 	rm -rf "$TERMUX_PKG_SRCDIR"/cli/snapshot/*

@@ -144,11 +144,18 @@ declare -A _ALREADY_SEEN=() # Array of successful or packages and their old/new 
 _fetch_and_cache_tags() {
 	echo "INFO: Fetching and caching tags"
 
-	local __PACKAGES=()
-	local __GITHUB_PACKAGES=()
+	local -a __PACKAGES=() __GITHUB_PACKAGES=() __UNCACHED_PACKAGES=()
 
-	# Find all packages to be processed
-	while read -r pkg_dir; do
+	# Find all packages to be processed that don't have custom termux_pkg_auto_update() functions
+	local pkg_dir
+	for pkg_dir in "$@"; do
+		# Skip packages with custom termux_pkg_auto_update() functions
+		if [[ "$(<"$pkg_dir/build.sh")" == *$'\ntermux_pkg_auto_update'* ]]; then
+			# Save these for the summary but don't try to do any caching.
+			__UNCACHED_PACKAGES+=("$pkg_dir")
+			continue
+		fi
+
 		BUILD_PACKAGES=false quiet _should_update "${pkg_dir}" || continue # Skip if not needed.
 		__PACKAGES+=("${pkg_dir}")
 
@@ -157,9 +164,7 @@ _fetch_and_cache_tags() {
 			[[ "$(<"$pkg_dir/build.sh")" =~ TERMUX_PKG_UPDATE_METHOD=[^[:space:]]*github || ! "$(<"$pkg_dir/build.sh")" =~ TERMUX_PKG_UPDATE_METHOD=[^[:space:]]* ]]; then
 			__GITHUB_PACKAGES+=("$pkg_dir")
 		fi
-
-	# Find all build.sh files and explicitly filter only files without custom `termux_pkg_auto_update`
-	done < <(grep -rL '^termux_pkg_auto_update' $(jq --raw-output 'del(.pkg_format) | keys | .[]' "${TERMUX_SCRIPTDIR}/repo.json") --include=build.sh | sed 's#/build\.sh$##')
+	done
 
 	echo "INFO: Building GraphQL queries"
 
@@ -265,9 +270,11 @@ _fetch_and_cache_tags() {
 		# Don't do this in the CI since that would spam the logs
 		[[ -z "${CI:-}" ]] && printf '\rINFO: Caching tags - %s' "${#LATEST_TAGS[*]}"
 	done < <(
+	if (( ${#__PACKAGES[@]} )); then
 		export -f __main__
 		export TERMUX_SCRIPTDIR GITHUB_TOKEN TERMUX_REPOLOGY_DATA_FILE
-		printf '%s\0' "${__PACKAGES[@]}" | xargs -0 -n1 -P"$(nproc)" bash -c '__main__ "$@"' _ |& grep -E '^(LOCAL|PKG|SKIP)\|'
+		printf '%s\0' "${__PACKAGES[@]}" | xargs -0 -n1 -P"$(nproc)" bash -c '__main__ "$@"' _
+	fi
 	)
 	# make sure the running tally gets a proper newline on local runs
 	[[ -z "${CI:-}" ]] && echo
@@ -278,9 +285,6 @@ _fetch_and_cache_tags() {
 	[[ "${CI-false}" == "true" ]] && echo "::group::INFO: Skipping the following up-to-date packages" || :
 	local pkg pkg_type pkg_name pkg_version
 	for pkg in "${LATEST_TAGS[@]}" "${LATEST_TAGS_GITHUB[@]}"; do
-		# local -
-		# PS4='+$0 \[\e[32m\]${FUNCNAME[0]:-<global scope>}${FUNCNAME[*]:+()}:$LINENO\[\e[0m\] '; set -x
-
 		pkg_type="${pkg%%|*}"
 		pkg_name="${pkg#*|}"; pkg_name="${pkg_name%|*}"
 		pkg_version="${pkg##*|}"
@@ -310,6 +314,13 @@ _fetch_and_cache_tags() {
 	echo "INFO: GitHub - ${#LATEST_TAGS_GITHUB[*]}"
 	echo "INFO: Other  - $(( ${#LATEST_TAGS[*]} - ${#LATEST_TAGS_GITHUB[*]} ))"
 	echo "INFO: Cached - ${#_ALREADY_SEEN[*]}"
+	if (( ${#__UNCACHED_PACKAGES[@]} )); then
+	printf '%s\n' \
+		"$([[ "${CI-false}" == "true" ]] && echo "::group::" || :)INFO: Uncached - ${#__UNCACHED_PACKAGES[*]}" \
+		"Not cacheable due to custom \`termux_pkg_auto_update()\`" \
+		"${__UNCACHED_PACKAGES[@]##*/}" \
+		"$([[ "${CI-false}" == "true" ]] && echo "::endgroup::" || :)"
+	fi
 }
 
 _check_updated() {
@@ -322,6 +333,7 @@ _check_updated() {
 	(
 	set +eu
 	quiet source "${1}/build.sh"
+	# shellcheck disable=SC2030
 	TERMUX_PKG_NAME="${1##*/}"
 	export TERMUX_PKG_UPGRADE_VERSION_DRY_RUN=1
 	# The call to `termux_pkg_upgrade_version` is delibrately
@@ -355,12 +367,18 @@ _run_update() {
 	local pkg_dir="$1" pkg_name
 	pkg_name="$(basename "${pkg_dir}")"
 	# needed for 'termux_pkg_is_update_needed'
+	# shellcheck disable=SC2031
 	export TERMUX_PKG_NAME="${pkg_name}"
-	# Run each package update in separate process since we include their environment variables.
+
 	local output="" _CURRENT_VERSION _NEWEST_VERSION _ISSUE
 	# shellcheck disable=SC1091 # Ignore shellcheck's inability to follow the source
 	_CURRENT_VERSION="$(set +eu; . "$(realpath "$pkg_dir")/build.sh"; echo "${TERMUX_PKG_VERSION#*:}")"
 
+	# Ensure the FIFO is empty at the start of each update.
+	# This clears stale data from dependency checks, to prevent
+	# stale/incorrect version numbers in the summary.
+	read -rt0.001 _ < "$IPC_FIFO"
+	# Run each package update in separate process since we include their environment variables.
 	if output="$(
 		set -euo pipefail
 		# Pass cached tag we obtained earlier
@@ -472,16 +490,6 @@ export IPC_FIFO="${TMPDIR:-/tmp}/termux_ipc_$$.fifo"
 mkfifo "$IPC_FIFO"
 exec {IPC_FIFO_FD}<>"$IPC_FIFO"
 
-# If the dependencies for the 'dump-repology-data' script are not yet present,
-# create a venv, activate the venv, and install them in the venv before running the
-# 'dump-repology-data' script
-if ! python3 -c "import requests" 2>/dev/null; then
-	dump_repology_data_venv_dir="$(mktemp -d)"
-	python3 -m venv --system-site-packages "$dump_repology_data_venv_dir"
-	source "$dump_repology_data_venv_dir/bin/activate"
-	echo "INFO: Installing the dependencies of the 'dump-repology-data' script"
-	pip3 install requests
-fi
 echo "INFO: Running the 'dump-repology-data' script"
 if python3 "${TERMUX_SCRIPTDIR}"/scripts/updates/api/dump-repology-data "${TERMUX_REPOLOGY_DATA_FILE}"; then
 	echo "INFO: The 'dump-repology-data' script was successful"
@@ -492,18 +500,8 @@ fi
 
 if [[ "$1" == "@all" ]]; then
 	declare -a PACKAGE_LIST=()
-	# To conserve API limits and speed up update checking,
-	# pre-cache the latest tags and eliminate packages without updates
-	# when it is possible to determine that from the API response alone.
-	_fetch_and_cache_tags
 	for channel in $(jq --raw-output 'del(.pkg_format) | keys | .[]' "${TERMUX_SCRIPTDIR}/repo.json"); do
 		for pkg_dir in "${channel}"/*; do
-			# Check if we should be putting this package into the list.
-			# Skip it if:
-			# - it doesn't have auto-updates enabled
-			# - it was already cached by _fetch_and_cache_tags
-			# - or there is an open auto-update issue for it
-			_should_update "${pkg_dir}" || continue
 			PACKAGE_LIST+=("$pkg_dir")
 		done
 	done
@@ -511,18 +509,34 @@ if [[ "$1" == "@all" ]]; then
 	unset PACKAGE_LIST
 fi
 
-for pkg_dir in "$@"; do
-	_unix_millis="$(date +%10s%3N)"
-	if [[ ! -d "${pkg_dir}" ]]; then # If only package name is given, try to find it's directory.
+declare -a PACKAGE_DIRS_LIST=()
+for pkg in "$@"; do
+	pkg_dir="${pkg}"
+	if [[ ! -d "${pkg}" ]]; then # If only package name is given, try to find its directory.
 		for channel in $(jq --raw-output 'del(.pkg_format) | keys | .[]' "${TERMUX_SCRIPTDIR}/repo.json"); do
-			if [[ -d "${channel}/${pkg_dir}" ]]; then
-				pkg_dir="${channel}/${pkg_dir}"
+			if [[ -d "${channel}/${pkg}" ]]; then
+				pkg_dir="${channel}/${pkg}"
 				break
 			fi
 		done
 	fi
+	PACKAGE_DIRS_LIST+=("$pkg_dir")
+done
 
-	! _should_update "${pkg_dir}" && continue
+# To conserve API limits and speed up update checking,
+# pre-cache the latest tags
+_fetch_and_cache_tags "${PACKAGE_DIRS_LIST[@]}"
+
+for pkg_dir in "${PACKAGE_DIRS_LIST[@]}"; do
+	_unix_millis="$(date +%10s%3N)"
+	# eliminate packages without updates
+	# when it is possible to determine that from the API response alone.
+	# Check if we should be updating this package.
+	# Skip it if:
+	# - it doesn't have auto-updates enabled
+	# - it was already cached by _fetch_and_cache_tags
+	# - or there is an open auto-update issue for it
+	_should_update "${pkg_dir}" || continue
 	_update_dependencies "${pkg_dir}"
 	_run_update "${pkg_dir}"
 	echo "termux - took $(ms_to_human_readable $(( $(date +%10s%3N) - _unix_millis )))"

@@ -1,6 +1,6 @@
-diff -u -r ../go/src/runtime/runtime1.go ./src/runtime/runtime1.go
---- ../go/src/runtime/runtime1.go	2024-05-01 19:49:47.000000000 +0000
-+++ ./src/runtime/runtime1.go	2024-06-03 19:49:01.863556548 +0000
+diff -u -r ../cache/go/src/runtime/runtime1.go ./src/runtime/runtime1.go
+--- ../cache/go/src/runtime/runtime1.go	2026-02-10 01:22:00.000000000 +0000
++++ ./src/runtime/runtime1.go	2026-03-13 22:52:38.612222594 +0000
 @@ -5,6 +5,7 @@
  package runtime
  
@@ -8,22 +8,25 @@ diff -u -r ../go/src/runtime/runtime1.go ./src/runtime/runtime1.go
 +	"cgocfg"
  	"internal/bytealg"
  	"internal/goarch"
- 	"runtime/internal/atomic"
-@@ -69,13 +70,33 @@
- 	sysargs(c, v)
- }
+ 	"internal/runtime/atomic"
+@@ -57,6 +58,16 @@
+ 	argv **byte
+ )
  
 +func AndroidSelfExecutable() string {
-+	var offset int32
++	var adjust int32
 +	if cgocfg.Enabled {
-+		offset = 0
++		adjust = 0
 +	} else {
-+		offset = 1
++		adjust = 1
 +	}
-+	return gostringnocopy(argv_index(argv, offset))
++	return gostringnocopy(argv_index(argv, adjust))
 +}
 +
- func goargs() {
+ // nosplit for use in linux startup sysargs.
+ //
+ //go:nosplit
+@@ -74,9 +79,19 @@
  	if GOOS == "windows" {
  		return
  	}

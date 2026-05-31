@@ -2,10 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://www.torproject.org
 TERMUX_PKG_DESCRIPTION="The Onion Router anonymizing overlay network"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.4.9.5"
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION="0.4.9.8"
 TERMUX_PKG_SRCURL=https://www.torproject.org/dist/tor-$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=c949c2f86b348e64891976f6b1e49c177655b23df97193049bf1b8cd3099e179
+TERMUX_PKG_SHA256=ac1f394e2dd2ab0877d27d928fd0d9e86662fe3ca6afdffb9fd9b6f0f96d05de
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libevent, liblzma, openssl, resolv-conf, zlib"
 # We're not using '--enable-android' as it just defines 'USE_ANDROID', which

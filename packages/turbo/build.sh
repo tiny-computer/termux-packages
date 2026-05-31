@@ -1,10 +1,10 @@
-TERMUX_PKG_HOMEPAGE=https://turbo.build/
+TERMUX_PKG_HOMEPAGE=https://turborepo.dev/
 TERMUX_PKG_DESCRIPTION="High-performance build system for JS/TS"
 TERMUX_PKG_MAINTAINER="@xingguangcuican6666"
 TERMUX_PKG_LICENSE="MIT"
-TERMUX_PKG_VERSION="2.8.17"
-TERMUX_PKG_SRCURL=https://github.com/vercel/turbo/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=e85044b987913b913cd2a33a3d1fb0e6b2e8088525e921bcf3a8dbf4178c9e01
+TERMUX_PKG_VERSION="2.9.14"
+TERMUX_PKG_SRCURL="https://github.com/vercel/turborepo/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SHA256=afe2f1a67d91290bec61cce885220e9f18c14b38e5e1fae8c519ad4e7ccd2925
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_TAG_TYPE=latest-release-tag

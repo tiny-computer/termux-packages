@@ -92,7 +92,7 @@ if [ "$UNAME" = Darwin ]; then
 	SEC_OPT=""
 else
 	REPOROOT="$(dirname $(readlink -f $0))/../"
-	SEC_OPT=" --security-opt seccomp=$REPOROOT/scripts/profile.json --security-opt apparmor=_custom-termux-package-builder-$CONTAINER_NAME --cap-add CAP_SYS_ADMIN --device /dev/fuse"
+	SEC_OPT=" --privileged --security-opt apparmor:unconfined --cap-add CAP_SYS_ADMIN --device /dev/fuse"
 fi
 
 if [ "${CI:-}" = "true" ]; then
@@ -195,6 +195,7 @@ if ! $SUDO docker container inspect $CONTAINER_NAME > /dev/null 2>&1; then
 		--detach \
 		--init \
 		--name $CONTAINER_NAME \
+		--user root \
 		--volume $VOLUME \
 		$SEC_OPT \
 		--tty \
